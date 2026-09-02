@@ -1,0 +1,18 @@
+# Credentials and sensitive information (Mandatory for Inception)
+secrets/
+srcs/.env
+*.env
+
+# SSL certificates and private keys
+*.key
+*.crt
+*.csr
+*.pem
+
+# macOS metadata
+.DS_Store
+
+# Temporary / dump files
+*.sql
+*.tar
+*.gz
