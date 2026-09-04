@@ -1,13 +1,3 @@
-# Docker compose build --> execution une seule fois des 
-# 6 premieres etapes. --> Tout est figé dans l'image. MariaDB est donc déjà installé et prêt sur le disque dur virtuel de l'image.
-# Les secrets (mots de passe) ne sont pas encore connus à cette étape.
-
-#  7-> s'éxécute dès que le conteneur s'allume (ex: docker compose up)
-# L'image est démarrée en mémoire vive.
-# Docker monte les volumes et injecte les fichiers secrets dans /run/secrets/.
-# Docker lance la commande de l'ENTRYPOINT : mon init_db.sh.
-# En gros ENTRYPOINT configure les données dynamiques (mots de passe, utilisateurs, base SQL) et lance le service au démarrage du conteneur.
-
 # 1- avant dernière version stable de Debian
 FROM debian:bullseye
 
