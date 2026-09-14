@@ -1,0 +1,108 @@
+version: '3.8'
+
+# ==============================================================================
+# 1. DEFINITION DES SERVICES (CONTENEURS)
+# ==============================================================================
+services:
+
+  # ----------------------------------------------------------------------------
+  # SERVICE 1 : MARIADB (Base de données)
+  # ----------------------------------------------------------------------------
+  mariadb:
+    build:
+      context: ./requirements/mariadb
+      dockerfile: Dockerfile
+    image: mariadb:inception
+    container_name: mariadb
+    restart: always
+    env_file:
+      - .env
+    secrets:
+      - db_password
+      - db_root_password
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - inception-network
+    # Aucun port exposé vers l'extérieur (sécurité)
+
+  # ----------------------------------------------------------------------------
+  # SERVICE 2 : WORDPRESS + PHP-FPM (Moteur applicatif)
+  # ----------------------------------------------------------------------------
+  wordpress:
+    build:
+      context: ./requirements/wordpress
+      dockerfile: Dockerfile
+    image: wordpress:inception
+    container_name: wordpress
+    restart: always
+    depends_on:
+      - mariadb
+    env_file:
+      - .env
+    secrets:
+      - db_password
+      - credentials
+    volumes:
+      - wp_data:/var/www/html
+    networks:
+      - inception-network
+    # Aucun port exposé vers l'extérieur (FastCGI écoute sur le réseau interne)
+
+  # ----------------------------------------------------------------------------
+  # SERVICE 3 : NGINX (Point d'entrée sécurisé HTTPS 443)
+  # ----------------------------------------------------------------------------
+  nginx:
+    build:
+      context: ./requirements/nginx
+      dockerfile: Dockerfile
+    image: nginx:inception
+    container_name: nginx
+    restart: always
+    depends_on:
+      - wordpress
+    ports:
+      - "443:443"
+    volumes:
+      - wp_data:/var/www/html:ro
+    networks:
+      - inception-network
+
+# ==============================================================================
+# 2. RESEAU DOCKER DEDIE (ISOLATION)
+# ==============================================================================
+networks:
+  inception-network:
+    name: inception-network
+    driver: bridge
+
+# ==============================================================================
+# 3. VOLUMES PERSISTANTS AVEC BIND SUR L'HÔTE LINUX 42
+# ==============================================================================
+volumes:
+  wp_data:
+    name: wp_data
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/bpasquer/data/wordpress
+
+  db_data:
+    name: db_data
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/bpasquer/data/mariadb
+
+# ==============================================================================
+# 4. GESTION DES SECRETS DOCKER (MOTS DE PASSE HORS DU CODE)
+# ==============================================================================
+secrets:
+  db_password:
+    file: ../secrets/db_password.txt
+  db_root_password:
+    file: ../secrets/db_root_password.txt
+  credentials:
+    file: ../secrets/credentials.txt
