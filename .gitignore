@@ -1,7 +1,8 @@
 # Credentials and sensitive information (Mandatory for Inception)
 secrets/
-srcs/.env
 *.env
+!.env.example
+!*.env.example
 
 # SSL certificates and private keys
 *.key
