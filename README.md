@@ -50,6 +50,7 @@ The infrastructure deploys a dynamic **WordPress** website powered by a **MariaD
    ```bash
    cp srcs/.env.example srcs/.env
    # Ensure secrets/ folder contains db_password.txt, db_root_password.txt, credentials.txt
+   # (See TEST_GUIDE_42.md or USER_DOC.md for CLI vs VS Code graphical setup)
    ```
 3. **Build and launch the stack**:
    ```bash

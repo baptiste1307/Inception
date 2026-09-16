@@ -66,6 +66,34 @@ Credentials are stored securely in local files inside the `secrets/` directory (
   - **Root password**: stored in `secrets/db_root_password.txt`
   - **Database user password**: stored in `secrets/db_password.txt`
 
+### Creating / Initializing Secrets
+
+Two equivalent methods can be used to set up the credentials on a new clone:
+
+#### Method A: Command-Line Interface (Terminal)
+```bash
+cp srcs/.env.example srcs/.env
+mkdir -p secrets
+echo "super_root_pass_42" > secrets/db_root_password.txt
+echo "super_user_pass_42" > secrets/db_password.txt
+cat << 'EOF' > secrets/credentials.txt
+WP_ADMIN_PASSWORD=super_wp_admin_pass_42
+WP_USER_PASSWORD=super_wp_user_pass_42
+EOF
+chmod 600 secrets/*
+```
+
+#### Method B: Visual Interface (VS Code / Remote - SSH)
+1. In the file explorer, duplicate `srcs/.env.example` into `srcs/.env`.
+2. Create a new folder named `secrets/` at the repository root.
+3. Inside `secrets/`, create:
+   - `db_root_password.txt` containing the root password.
+   - `db_password.txt` containing the database user password.
+   - `credentials.txt` containing `WP_ADMIN_PASSWORD=...` and `WP_USER_PASSWORD=...`.
+4. Open the integrated terminal (`Ctrl + ~`) and restrict permissions: `chmod 600 secrets/*`.
+
+*(Note: The `secrets/` folder appears dimmed in VS Code because it is safely excluded by `.gitignore`).*
+
 ---
 
 ## 5. Checking Service Health
