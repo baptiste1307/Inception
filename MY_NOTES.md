@@ -282,3 +282,201 @@ C'est de la **virtualisation imbriquée dans de la virtualisation** !
 - **Avec `--bootstrap` (notre méthode propre)** :
   - MariaDB lit les requêtes SQL et les grave **directement dans les fichiers physiques du disque dur**, hors-ligne, sans allumer de réseau ni de serveur.
   - C'est instantané (0.5 seconde) et 100% sécurisé au premier démarrage !
+
+---
+
+## 🔬 12. Maîtriser le PID 1 : Vérification, Héritages & Processus Enfants
+
+Le sujet 42 interdit formellement les hacks comme `tail -f`, `sleep infinity`, ou les boucles `while true`. Le correcteur vérifiera systématiquement quels processus tournent dans vos conteneurs.
+
+### A. Les commandes de vérification
+
+Depuis la machine hôte ou la VM :
+
+```bash
+# Voir les processus de chaque conteneur depuis Docker :
+docker top mariadb
+docker top wordpress
+docker top nginx
+
+# Ou inspecter l'arborescence complète de tous les services en une fois :
+docker compose -f srcs/docker-compose.yml top
+
+# Ou exécuter 'ps' directement à l'intérieur d'un conteneur :
+docker exec wordpress ps aux
+docker exec nginx ps aux
+```
+
+---
+
+### B. Décryptage des résultats : Rôle du PID 1 et Héritage (Master / Workers)
+
+Quand vous tapez `docker top wordpress` ou `docker top nginx`, vous voyez plusieurs lignes. **C'est tout à fait normal et c'est même ce qui est attendu !** Voici pourquoi :
+
+```text
+UID        PID     PPID    C   STIME   TTY   TIME       CMD
+root       1       0       0   15:30   ?     00:00:00   php-fpm: master process (/etc/php/8.2/fpm/php-fpm.conf)
+www-data   7       1       0   15:30   ?     00:00:00   php-fpm: pool www
+www-data   8       1       0   15:30   ?     00:00:00   php-fpm: pool www
+```
+
+#### 1. Le Processus Maître (Master Process — PID 1)
+
+- **Qui est-il ?** C'est le processus racine du conteneur (`PID = 1`, son parent `PPID = 0` est le démon Docker).
+- **Son rôle :** Il contrôle la vie du conteneur. C'est lui qui écoute les signaux du système d'exploitation (`SIGTERM`, `SIGINT`, `SIGHUP`). Quand vous faites `docker stop`, Docker envoie `SIGTERM` au PID 1.
+- **Pourquoi `exec` est crucial :**
+  Dans nos scripts d'initialisation (`wp_init.sh`, `init_db.sh`), la dernière ligne commence TOUJOURS par `exec` (ex: `exec php-fpm8.2 -F`). L'appel système Linux `execve` **remplace le script bash** par le binaire officiel sous le même PID (le PID 1). Sans `exec`, bash resterait PID 1, ne transmettrait pas les signaux d'arrêt, et Docker devrait attendre 10 secondes avant de tuer brutalement le conteneur (`SIGKILL`).
+
+#### 2. Les Processus Ouvriers (Worker Processes — Processus Enfants)
+
+- **Qui sont-ils ?** Ce sont les processus enfants générés par le Master (`PPID = 1`).
+- **Leur rôle :** Ils traitent les requêtes des visiteurs en parallèle.
+- **Pourquoi ils tournent sous `www-data` et non sous `root` ?**
+  Par principe de **moindre privilège** (sécurité) : le Master process démarre en `root` pour pouvoir s'attacher aux fichiers de configuration et ouvrir les ports, puis il délègue l'exécution du code PHP et du trafic web à des processus enfants sous l'utilisateur bridé `www-data`. Si un hacker trouve une faille dans un plugin WordPress, il ne sera compromis qu'en tant que `www-data` et ne pourra pas prendre le contrôle du conteneur en root !
+
+---
+
+## 🌐 13. Réseau & DNS Local : `/etc/hosts` de l'Hôte vs de la VM
+
+Une incompréhension fréquente concerne le fichier `/etc/hosts` : où faut-il ajouter la ligne `127.0.0.1 bpasquer.42.fr` ?
+
+### A. Le rôle de `/etc/hosts`
+
+`/etc/hosts` est le **carnet d'adresses DNS local**. Avant même d'interroger les serveurs DNS d'Internet, n'importe quel système d'exploitation (Linux, macOS, Windows) consulte ce fichier pour savoir quelle adresse IP correspond à un nom de domaine.
+
+### B. La Règle d'or : On configure la machine où tourne le CLIENT (Navigateur / Curl)
+
+```
+                       ┌─────────────────────────────────────────────────────────┐
+                       │                   Machine Physique Hôte                 │
+                       │                                                         │
+                       │   Navigateur Web (Firefox) ─── regarde /etc/hosts HÔTE  │
+                       │               │                                         │
+                       │               ▼ (Port 8443 - NAT)                       │
+                       │      ┌───────────────────────────────────────────┐      │
+                       │      │             Machine Virtuelle             │      │
+                       │      │                                           │      │
+                       │      │   Curl / Lynx ──────── regarde /etc/hosts │      │
+                       │      │                             DE LA VM      │      │
+                       │      │        │                                  │      │
+                       │      │        ▼ (Port 443 - NGINX)               │      │
+                       │      │   [ Conteneurs Docker Inception ]         │      │
+                       │      └───────────────────────────────────────────┘      │
+                       └─────────────────────────────────────────────────────────┘
+```
+
+1. **Si vous utilisez le navigateur de la machine physique hôte (Postes 42) :**
+   - C'est le navigateur de l'hôte qui cherche `bpasquer.42.fr`.
+   - **Il faut impérativement configurer le `/etc/hosts` de l'HÔTE** :
+     ```bash
+     echo "127.0.0.1 bpasquer.42.fr" >> /etc/hosts
+     ```
+   - ⚠️ _Rappel 42_ : Sur les postes physiques du cluster, `/etc/hosts` est **réinitialisé à chaque fermeture de session ou redémarrage**. S'il y a une erreur `ERR_NAME_NOT_RESOLVED`, il suffit de réexécuter cette commande sur l'hôte.
+
+2. **Si vous utilisez un navigateur ou une commande DANS la VM (ex: `curl`, `lynx`) :**
+   - Le client tourne à l'intérieur de la VM Debian.
+   - **Il faut impérativement configurer le `/etc/hosts` DE LA VM** :
+     ```bash
+     echo "127.0.0.1 bpasquer.42.fr" | sudo tee -a /etc/hosts
+     ```
+
+💡 _Conseil pour être tranquille :_ Mettez la ligne dans les **deux** fichiers `/etc/hosts` (sur l'hôte et dans la VM).
+
+---
+
+## 🔌 14. Accéder au Site : Port 8443 (NAT) vs Port 443 (SSH -X / Bureau VM)
+
+Le sujet exige : _« Your NGINX container must be the only entrypoint into your infrastructure via the port 443 only »_. Alors pourquoi parle-t-on souvent du port `8443` ?
+
+### A. Pourquoi le port `8443` existe-t-il sur les postes 42 ?
+
+1. **La restriction Linux des ports privilégiés :**
+   Sous Linux, tous les ports réseau inférieurs à `1024` (comme le port `80` HTTP et le port `443` HTTPS) sont dits **privilégiés** : seul l'administrateur `root` a le droit d'ouvrir un port inférieur à 1024 sur une machine.
+2. **Sur les postes du cluster 42 :**
+   Vous êtes un utilisateur standard sans droits `root` sur l'ordinateur physique.
+3. **La redirection NAT de VirtualBox :**
+   - Pour que la machine hôte puisse communiquer avec la VM, VirtualBox utilise une règle NAT.
+   - Si vous demandiez à VirtualBox d'écouter sur le port `443` de l'hôte physique, Linux refuserait (`Permission denied`).
+   - On choisit donc un port non privilégié (> 1024), traditionnellement **`8443`** sur l'hôte, et VirtualBox le transfère vers le port **`443`** de la VM :
+     ```text
+     Hôte (port 8443) ──[ Redirection NAT VirtualBox ]──> VM (port 443) ──> Conteneur NGINX (port 443)
+     ```
+4. **URL correspondante :**
+   `https://bpasquer.42.fr:8443`
+
+---
+
+### B. L'alternative élégante : Le vrai port 443 via `SSH -X` (X11 Forwarding)
+
+Si un correcteur vous dit : _« Tu utilises le port 8443 dans ton URL, alors que le sujet dit 443 only ! »_, vous avez deux réponses imparables :
+
+#### Réponse 1 : Montrer `docker-compose.yml`
+
+Montrez-lui que votre infrastructure Docker est 100% conforme :
+
+```yaml
+nginx:
+  ports:
+    - "443:443" # NGINX n'écoute QUE sur 443
+```
+
+Le port 8443 n'existe pas dans votre Docker, c'est uniquement VirtualBox sur l'hôte physique.
+
+#### Réponse 2 : Faire la démonstration sur le vrai port 443 avec `SSH -X`
+
+Le protocole **X11 Forwarding** permet de lancer une application graphique (comme Firefox) à l'intérieur de la VM tout en affichant sa fenêtre sur votre écran hôte :
+
+1. Depuis le terminal de la machine hôte, connectez-vous en SSH avec le drapeau `-X` :
+   ```bash
+   ssh -X bpasquer@<IP_DE_LA_VM>
+   ```
+2. Dans cette session SSH, lancez le navigateur Firefox installé dans la VM :
+   ```bash
+   firefox-esr &
+   ```
+3. La fenêtre de Firefox s'ouvre sur votre écran hôte. Mais **le processus et tout son trafic réseau tournent à 100% dans la VM** !
+4. Dans ce Firefox, tapez directement :
+   ```text
+   https://bpasquer.42.fr
+   ```
+   _(Sans aucun `:8443` ! Le site s'affiche sur le port 443 standard)._
+
+---
+
+### 📊 Tableau Récapitulatif des Méthodes d'Accès
+
+| Méthode                      | Où tourne le navigateur ?         | Port tapé dans l'URL          | Pourquoi l'utiliser ?                                             |
+| :--------------------------- | :-------------------------------- | :---------------------------- | :---------------------------------------------------------------- |
+| **Navigateur Hôte + NAT**    | Sur l'ordinateur physique         | `https://bpasquer.42.fr:8443` | Pratique, rapide, utilise votre navigateur habituel.              |
+| **SSH `-X` (X11)**           | Dans la VM (affichage déporté)    | `https://bpasquer.42.fr`      | Prouve que le port 443 natif fonctionne sans redirection de port. |
+| **Terminal VM (`curl -kI`)** | Dans la VM (en ligne de commande) | `https://bpasquer.42.fr`      | Preuve instantanée en soutenance (`HTTP/2 200` sur le port 443).  |
+| **Bureau Graphique VM**      | Directement dans la VM (XFCE)     | `https://bpasquer.42.fr`      | 100% autonome si votre VM possède une interface graphique.        |
+
+---
+
+## 🧪 15. La Checklist Incontournable pour la Soutenance (Les Pièges de la Grille 42)
+
+Avant d'appeler votre correcteur, validez ces 5 points critiques :
+
+1. **Test des Secrets dans Git (Éliminatoire)** :
+   Vérifiez qu'aucun mot de passe n'est indexé par Git :
+   ```bash
+   git status
+   git log -p | grep -i "password"
+   ```
+2. **Crash Test de Persistance (Éliminatoire)** :
+   - Connectez-vous sur `https://bpasquer.42.fr/wp-login.php`.
+   - Créez un article intitulé _"Test Persistance"_.
+   - Éteignez tout avec `make down` (ou `docker compose down`).
+   - Rallumez avec `make up`.
+   - Rechargez la page : l'article DOIT être toujours là !
+3. **Test de Réinitialisation Complète (`fclean`)** :
+   - Tapez `make fclean` en utilisateur simple (sans `sudo`).
+   - Vérifiez que `/home/bpasquer/data` a bien disparu et que `docker ps` est vide.
+   - Tapez `make` : tout doit se reconstruire et se relancer proprement.
+4. **Test des 2 Utilisateurs WordPress** :
+   - Dans le tableau de bord WordPress ➔ **Utilisateurs** :
+   - Il doit y avoir **exactement 2 utilisateurs** (l'administrateur et un auteur).
+   - L'identifiant de l'administrateur ne doit comporter ni `admin`, ni `Admin`, ni `administrator`.
+5. **Test de la Règle du PID 1** :
+   Tapez `docker compose top` ou `docker top <service>` pour prouver que chaque conteneur a son démon officiel en PID 1 (`nginx`, `php-fpm8.2`, `mariadbd`).

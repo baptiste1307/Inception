@@ -10,6 +10,12 @@ secrets/
 *.csr
 *.pem
 
+# IDE & AI Assistant artifacts (interdits sur Vogsphere)
+.gemini/
+.claude/
+.vscode/
+.idea/
+
 # macOS metadata
 .DS_Store
 

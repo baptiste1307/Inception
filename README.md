@@ -67,17 +67,18 @@ The infrastructure deploys a dynamic **WordPress** website powered by a **MariaD
 
 ### Available Makefile Commands
 
-| Command             | Action                                                                                       |
-| :------------------ | :------------------------------------------------------------------------------------------- |
-| `make` / `make all` | Creates host data directories, builds images, and starts all containers in detached mode.    |
-| `make build`        | Builds or rebuilds all Docker images.                                                        |
-| `make up`           | Starts the containers without rebuilding.                                                    |
-| `make down`         | Stops and removes active containers and networks.                                            |
-| `make status`       | Displays the status of containers, volumes, and networks.                                    |
-| `make logs`         | Follows real-time logs from all services.                                                    |
-| `make clean`        | Stops containers and removes built Docker images.                                            |
-| `make fclean`       | Complete teardown: removes containers, images, networks, volumes, and host data directories. |
-| `make re`           | Re-executes `fclean` followed by `all`.                                                      |
+| Command               | Action                                                                                       |
+| :-------------------- | :------------------------------------------------------------------------------------------- |
+| `make` / `make all`   | Creates host data directories, builds images, and starts all containers in detached mode.    |
+| `make build`          | Builds or rebuilds all Docker images.                                                        |
+| `make build-no-cache` | Builds or rebuilds all Docker images without cache.                                          |
+| `make up`             | Starts the containers without rebuilding.                                                    |
+| `make down`           | Stops and removes active containers and networks.                                            |
+| `make status`         | Displays the status of containers, volumes, and networks.                                    |
+| `make logs`           | Follows real-time logs from all services.                                                    |
+| `make clean`          | Stops containers and removes built Docker images.                                            |
+| `make fclean`         | Complete teardown: removes containers, images, networks, volumes, and host data directories. |
+| `make re`             | Re-executes `fclean` followed by `all`.                                                      |
 
 ---
 

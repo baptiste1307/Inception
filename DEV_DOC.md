@@ -86,7 +86,8 @@ inception/
 
 | Action                        | Command                                                                                            |
 | :---------------------------- | :------------------------------------------------------------------------------------------------- |
-| **Build from scratch**        | `docker compose -f srcs/docker-compose.yml build --no-cache`                                       |
+| **Build all from scratch**    | `docker compose -f srcs/docker-compose.yml build --no-cache` (ou `make build-no-cache`)            |
+| **Rebuild single service**    | `docker compose -f srcs/docker-compose.yml build --no-cache <service>` (ex: `wordpress`)           |
 | **Start with live logs**      | `docker compose -f srcs/docker-compose.yml up`                                                     |
 | **Start detached**            | `docker compose -f srcs/docker-compose.yml up -d`                                                  |
 | **Open container shell**      | `docker exec -it mariadb bash`<br>`docker exec -it wordpress bash`<br>`docker exec -it nginx bash` |
