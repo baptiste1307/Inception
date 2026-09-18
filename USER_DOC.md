@@ -6,11 +6,11 @@ This guide explains how an administrator or end-user can operate, access, and mo
 
 ## 1. Services Provided by the Stack
 
-| Service | Technology | Role | Access / Port |
-| :--- | :--- | :--- | :--- |
-| **Reverse Proxy** | **NGINX** | Encrypts traffic via HTTPS (TLSv1.2/1.3), routes requests. | `https://bpasquer.42.fr` (Port 443) |
-| **Web Application** | **WordPress + PHP-FPM** | CMS engine executing application logic and dynamic pages. | Internal FastCGI (Port 9000) |
-| **Database** | **MariaDB** | Stores website content, articles, users, and settings. | Internal MySQL (Port 3306) |
+| Service             | Technology              | Role                                                       | Access / Port                       |
+| :------------------ | :---------------------- | :--------------------------------------------------------- | :---------------------------------- |
+| **Reverse Proxy**   | **NGINX**               | Encrypts traffic via HTTPS (TLSv1.2/1.3), routes requests. | `https://bpasquer.42.fr` (Port 443) |
+| **Web Application** | **WordPress + PHP-FPM** | CMS engine executing application logic and dynamic pages.  | Internal FastCGI (Port 9000)        |
+| **Database**        | **MariaDB**             | Stores website content, articles, users, and settings.     | Internal MySQL (Port 3306)          |
 
 ---
 
@@ -19,12 +19,15 @@ This guide explains how an administrator or end-user can operate, access, and mo
 All operational commands are run from the root of the repository via `make`:
 
 - **Start the stack**:
+
   ```bash
   make
   ```
-  *(Builds the images if necessary, creates storage directories, and starts the services in the background).*
+
+  _(Builds the images if necessary, creates storage directories, and starts the services in the background)._
 
 - **Stop the stack**:
+
   ```bash
   make down
   ```
@@ -39,15 +42,26 @@ All operational commands are run from the root of the repository via `make`:
 
 ## 3. Accessing the Website & Administration Panel
 
-### Local Domain Configuration (First Time Only)
-Ensure your system resolves `bpasquer.42.fr` locally by checking `/etc/hosts`:
+### Local Domain Configuration
+
+Ensure your system resolves `bpasquer.42.fr` locally by adding it to `/etc/hosts`:
+
 ```bash
-127.0.0.1 bpasquer.42.fr
+echo "127.0.0.1 bpasquer.42.fr" >> /etc/hosts
 ```
 
+> ⚠️ **Troubleshooting — Site Inaccessible / DNS Error (`ERR_NAME_NOT_RESOLVED`)**:
+>
+> - On **42 School workstations**, `/etc/hosts` on the physical host machine is **automatically reset on every logout or system reboot**. If the website cannot be reached, simply re-add the entry on the host machine (`echo "127.0.0.1 bpasquer.42.fr" >> /etc/hosts`).
+> - When running inside a **headless VirtualBox VM (CLI only)**:
+>   - **X11 Forwarding**: Connect via `ssh -X -p 2323 bpasquer@127.0.0.1` and launch `firefox-esr &` inside the VM to open a graphical browser on the host display pointing to `https://bpasquer.42.fr`.
+>   - **Terminal browser**: Install and use `lynx https://bpasquer.42.fr` or test with `curl -kI https://bpasquer.42.fr`.
+>   - **Host Port Forwarding**: Forward host port `8443` to guest port `443` in VirtualBox NAT settings and browse on the host via `https://bpasquer.42.fr:8443`.
+
 ### URLs
-- **Public Website**: [https://bpasquer.42.fr](https://bpasquer.42.fr)
-  *(Accept the self-signed SSL certificate warning in your browser).*
+
+- **Public Website**: [https://bpasquer.42.fr](https://bpasquer.42.fr) _(or `https://bpasquer.42.fr:8443` when port-forwarded)_
+  _(Accept the self-signed SSL certificate warning in your browser)._
 - **WordPress Admin Dashboard**: [https://bpasquer.42.fr/wp-login.php](https://bpasquer.42.fr/wp-login.php)
 
 ---
@@ -71,6 +85,7 @@ Credentials are stored securely in local files inside the `secrets/` directory (
 Two equivalent methods can be used to set up the credentials on a new clone:
 
 #### Method A: Command-Line Interface (Terminal)
+
 ```bash
 cp srcs/.env.example srcs/.env
 mkdir -p secrets
@@ -84,6 +99,7 @@ chmod 600 secrets/*
 ```
 
 #### Method B: Visual Interface (VS Code / Remote - SSH)
+
 1. In the file explorer, duplicate `srcs/.env.example` into `srcs/.env`.
 2. Create a new folder named `secrets/` at the repository root.
 3. Inside `secrets/`, create:
@@ -92,20 +108,22 @@ chmod 600 secrets/*
    - `credentials.txt` containing `WP_ADMIN_PASSWORD=...` and `WP_USER_PASSWORD=...`.
 4. Open the integrated terminal (`Ctrl + ~`) and restrict permissions: `chmod 600 secrets/*`.
 
-*(Note: The `secrets/` folder appears dimmed in VS Code because it is safely excluded by `.gitignore`).*
+_(Note: The `secrets/` folder appears dimmed in VS Code because it is safely excluded by `.gitignore`)._
 
 ---
 
 ## 5. Checking Service Health
 
 - **View active container status**:
+
   ```bash
   make status
   ```
+
   Expected output: All 3 containers (`nginx`, `wordpress`, `mariadb`) should have the status `Up`.
 
 - **Inspect real-time service logs**:
   ```bash
   make logs
   ```
-  *(Press `Ctrl+C` to exit log viewing).*
+  _(Press `Ctrl+C` to exit log viewing)._
