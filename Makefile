@@ -81,8 +81,11 @@ fclean:
 	@echo "$(RED)[WARNING] Nettoyage complet (conteneurs, images, volumes, réseaux)...$(RESET)"
 	@$(COMPOSE) down -v --rmi all --remove-orphans 2>/dev/null || true
 	@docker system prune -af --volumes 2>/dev/null || true
-	@echo "$(RED)[WARNING] Suppression des dossiers de données /home/bpasquer/data...$(RESET)"
-	@rm -rf $(WP_DATA) $(DB_DATA) 2>/dev/null || true
+	@echo "$(RED)[WARNING] Suppression des dossiers de données $(DATA_DIR)...$(RESET)"
+	@if [ -d "$(DATA_DIR)" ]; then \
+		docker run --rm -v $(DATA_DIR):/mnt debian:bookworm rm -rf /mnt/wordpress /mnt/mariadb 2>/dev/null || true; \
+		rm -rf $(DATA_DIR) 2>/dev/null || true; \
+	fi
 	@echo "$(GREEN)[SUCCESS] Environnement totalement réinitialisé.$(RESET)"
 
 re: fclean all

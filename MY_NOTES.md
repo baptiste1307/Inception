@@ -229,6 +229,10 @@ Supabase est basé sur **PostgreSQL standard** et est lui-même open-source. À 
 
 > _« C'est une commande interne qui permet d'exécuter des requêtes SQL d'initialisation directement sur les fichiers de la base sans ouvrir de port réseau ni lancer de serveur en arrière-plan. C'est rapide, propre et sécurisé au premier démarrage. »_
 
+#### Q7 : Le sujet impose le port 443 uniquement. Pourquoi utilises-tu le port 8443 depuis l'hôte ?
+
+> _« Mon infrastructure Docker respecte 100% la consigne : NGINX n'expose que le port 443 (`443:443`). Cependant, sur les postes Linux physiques de 42, les étudiants ne sont pas root et ne peuvent donc pas binder un port inférieur à 1024 sur l'hôte physique. Le port 8443 n'est qu'une redirection NAT VirtualBox pour tester depuis l'hôte. D'ailleurs, à l'intérieur de la VM, NGINX répond directement sur le vrai port 443 standard (`curl -kI https://bpasquer.42.fr`). »_
+
 ---
 
 ## 📦 9. Docker Compose : Volumes Nommés & Réseau Bridge

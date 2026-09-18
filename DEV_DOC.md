@@ -25,17 +25,27 @@ This document describes the technical implementation, development workflow, and 
    cp srcs/.env.example srcs/.env
    ```
 3. **Configure Secret Files**:
-   Create the `secrets/` directory if missing and supply the secret text files:
+   Create the `secrets/` directory, initialize the secret files with strict permissions, and add your confidential credentials:
+
    ```bash
+   # Create directory and secret files
    mkdir -p secrets
-   echo "super_root_pass_42" > secrets/db_root_password.txt
-   echo "super_user_pass_42" > secrets/db_password.txt
-   cat << 'SECRET_EOF' > secrets/credentials.txt
-   WP_ADMIN_PASSWORD=super_wp_admin_pass_42
-   WP_USER_PASSWORD=super_wp_user_pass_42
-   SECRET_EOF
+   touch secrets/db_root_password.txt
+   touch secrets/db_password.txt
+   touch secrets/credentials.txt
+
+   # Restrict permissions (read/write for current user only)
    chmod 600 secrets/*
    ```
+
+   Populate each file with your secrets:
+   - `secrets/db_root_password.txt`: Root password for MariaDB.
+   - `secrets/db_password.txt`: Password for the regular database user (`MYSQL_USER`).
+   - `secrets/credentials.txt`: Administrator and standard WordPress user passwords formatted as:
+     ```env
+     WP_ADMIN_PASSWORD=<your_wp_admin_password>
+     WP_USER_PASSWORD=<your_wp_user_password>
+     ```
 
 ---
 

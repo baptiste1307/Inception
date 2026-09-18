@@ -38,8 +38,10 @@ The infrastructure deploys a dynamic **WordPress** website powered by a **MariaD
 
 - Operating System: **Linux (Debian/Ubuntu)** or a dedicated Virtual Machine.
 - Tools: `docker`, `docker-compose-plugin` (or `docker-compose`), `make`.
-- Add local domain resolution in `/etc/hosts`:
+- Add local domain resolution in `/etc/hosts` (re-apply if reset on 42 school login):
   ```bash
+  echo "127.0.0.1 bpasquer.42.fr" >> /etc/hosts
+  # Or with sudo if restricted:
   echo "127.0.0.1 bpasquer.42.fr" | sudo tee -a /etc/hosts
   ```
 
