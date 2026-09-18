@@ -1,7 +1,8 @@
-# 1- avant dernière version stable de Debian
-FROM debian:bullseye
+# 1. IMAGE DE BASE (REGLE DU SUJET 42)
+# Debian Bookworm (Debian 12 - tag explicite obligatoire, :latest interdit)
+FROM debian:bookworm
 
-# 2- installation des paquets
+# 2. INSTALLATION DES PAQUETS
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     mariadb-server \

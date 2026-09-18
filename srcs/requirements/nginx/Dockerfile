@@ -1,6 +1,6 @@
 # 1. IMAGE DE BASE (REGLE DU SUJET 42)
-# Debian Bullseye (l'avant-dernière version stable, interdiction du tag ":latest")
-FROM debian:bullseye
+# Debian Bookworm (Debian 12 - tag explicite obligatoire, :latest interdit)
+FROM debian:bookworm
 
 # 2. INSTALLATION DE NGINX ET OPENSSL
 # - nginx : Le serveur web et reverse proxy

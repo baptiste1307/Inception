@@ -32,7 +32,7 @@ chmod 600 secrets/*
 
 ### Méthode 2 : Via une interface visuelle (VS Code / Remote - SSH)
 
-Si vous êtes connecté à votre VM via l'extension **Remote - SSH** de VS Code (ou avec VS Code directement dans la VM) :
+Si vous êtes connecté à votre VM via l'extension **Remote - SSH** (connect to host) de VS Code (ou avec VS Code directement dans la VM) :
 
 1. **Variables d'environnement :**
    - Dans l'explorateur de fichiers à gauche, faites un clic droit sur `srcs/.env.example` ➔ **Copier**, puis collez-le dans le même dossier et renommez-le en `.env`.

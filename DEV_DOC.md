@@ -7,11 +7,13 @@ This document describes the technical implementation, development workflow, and 
 ## 1. Environment Setup from Scratch
 
 ### System Requirements
-- Host OS: **Linux Debian 11 (Bullseye) / Ubuntu 22.04+** or Linux VM.
+
+- Host OS: **Linux (42 VM, Debian) / Ubuntu 22.04+** — any distribution able to run Docker Engine.
 - Docker Engine version 20.10+ & Docker Compose v2+.
 - Sudo/root access to create `/home/bpasquer/data/` directories and edit `/etc/hosts`.
 
 ### Initial Setup Steps
+
 1. **Clone the repository**:
    ```bash
    git clone <repo-url> inception
@@ -54,17 +56,17 @@ inception/
         ├── mariadb/
         │   ├── conf/50-server.cnf    # MariaDB networking & buffer config
         │   ├── tools/init_db.sh      # Database bootstrap & PID 1 launcher
-        │   ├── Dockerfile            # Debian Bullseye + MariaDB Server
+        │   ├── Dockerfile            # Debian Bookworm + MariaDB 10.11 Server
         │   └── .dockerignore
         ├── wordpress/
         │   ├── conf/www.conf         # PHP-FPM FastCGI pool (port 9000)
         │   ├── tools/wp_init.sh      # WP-CLI download, auto-install & PID 1
-        │   ├── Dockerfile            # Debian Bullseye + PHP7.4-FPM + WP-CLI
+        │   ├── Dockerfile            # Debian Bookworm + PHP8.2-FPM + WP-CLI
         │   └── .dockerignore
         └── nginx/
             ├── conf/nginx.conf       # TLSv1.2/1.3, FastCGI reverse proxy config
             ├── tools/nginx_start.sh  # OpenSSL certificate setup & PID 1
-            ├── Dockerfile            # Debian Bullseye + NGINX + OpenSSL
+            ├── Dockerfile            # Debian Bookworm + NGINX + OpenSSL
             └── .dockerignore
 ```
 
@@ -72,14 +74,14 @@ inception/
 
 ## 3. Container Management Commands
 
-| Action | Command |
-| :--- | :--- |
-| **Build from scratch** | `docker compose -f srcs/docker-compose.yml build --no-cache` |
-| **Start with live logs** | `docker compose -f srcs/docker-compose.yml up` |
-| **Start detached** | `docker compose -f srcs/docker-compose.yml up -d` |
-| **Open container shell** | `docker exec -it mariadb bash`<br>`docker exec -it wordpress bash`<br>`docker exec -it nginx bash` |
-| **Inspect database directly** | `docker exec -it mariadb mariadb -u wpuser -p wordpress` |
-| **Test FastCGI routing** | `docker exec -it nginx curl -k https://localhost` |
+| Action                        | Command                                                                                            |
+| :---------------------------- | :------------------------------------------------------------------------------------------------- |
+| **Build from scratch**        | `docker compose -f srcs/docker-compose.yml build --no-cache`                                       |
+| **Start with live logs**      | `docker compose -f srcs/docker-compose.yml up`                                                     |
+| **Start detached**            | `docker compose -f srcs/docker-compose.yml up -d`                                                  |
+| **Open container shell**      | `docker exec -it mariadb bash`<br>`docker exec -it wordpress bash`<br>`docker exec -it nginx bash` |
+| **Inspect database directly** | `docker exec -it mariadb mariadb -u wpuser -p wordpress`                                           |
+| **Test FastCGI routing**      | `docker exec -it nginx curl -k https://localhost`                                                  |
 
 ---
 
