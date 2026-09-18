@@ -1,12 +1,39 @@
-_This project has been created as part of the 42 curriculum by bpasquer._
+<h1 align="center">Inception</h1>
 
-# Inception — System Administration & Containerization
+<p align="center">
+  <strong>System administration and web infrastructure deployment with Docker & Docker Compose from scratch.</strong><br>
+  <em>Created as part of the 42 curriculum by bpasquer.</em>
+</p>
 
-## Description
+<p align="center">
+  <a href="#overview">Overview</a> •
+  <a href="#architecture">Architecture</a> •
+  <a href="#key-objectives--architectural-constraints">Objectives</a> •
+  <a href="#instructions">Instructions</a> •
+  <a href="#available-makefile-commands">Commands</a> •
+  <a href="#architectural-comparisons">Comparisons</a> •
+  <a href="#license">License</a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Docker-24.0%2B-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker" />
+  <img src="https://img.shields.io/badge/Docker%20Compose-v2-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker Compose" />
+  <img src="https://img.shields.io/badge/Debian-12%20Bookworm-A81D33?style=flat-square&logo=debian&logoColor=white" alt="Debian 12" />
+  <img src="https://img.shields.io/badge/NGINX-TLSv1.2%20%2F%201.3-009639?style=flat-square&logo=nginx&logoColor=white" alt="NGINX" />
+  <img src="https://img.shields.io/badge/WordPress-PHP--FPM-21759B?style=flat-square&logo=wordpress&logoColor=white" alt="WordPress" />
+  <img src="https://img.shields.io/badge/MariaDB-10.11-003545?style=flat-square&logo=mariadb&logoColor=white" alt="MariaDB" />
+  <img src="https://img.shields.io/badge/License-MIT-black?style=flat-square" alt="License" />
+</p>
+
+---
+
+## Overview
 
 **Inception** is a system administration project from the 42 Common Core. Its main goal is to build a complete, resilient, and secure web infrastructure using **Docker** and **Docker Compose**, without using any pre-built images from DockerHub.
 
 The infrastructure deploys a dynamic **WordPress** website powered by a **MariaDB** database and exposed exclusively through an **NGINX** web server over HTTPS (port 443 with TLSv1.2 / TLSv1.3). Each service runs in its own dedicated container built from scratch using Debian Bookworm (Debian 12).
+
+### Architecture
 
 ```
 [ Web Browser / Client ]
@@ -29,6 +56,17 @@ The infrastructure deploys a dynamic **WordPress** website powered by a **MariaD
   │ MariaDB Service │ (Database Storage)
   └─────────────────┘
 ```
+
+---
+
+## Key Objectives & Architectural Constraints
+
+- **Zero Pre-built Application Images**: Every service container (NGINX, WordPress, MariaDB) is built from scratch via custom Dockerfiles based on Debian Bookworm (Debian 12).
+- **Strict HTTPS Termination**: Only port `443` is exposed to the outside world, enforced with TLSv1.2 and TLSv1.3 protocols.
+- **Service Isolation & Security**: Containers communicate over a dedicated internal Docker bridge network; the MariaDB port (`3306`) and FastCGI port (`9000`) are not published to the host.
+- **Volume Persistence**: WordPress website files and MariaDB databases are bound to host persistent volumes (`/home/bpasquer/data/wordpress` and `/home/bpasquer/data/mariadb`).
+- **Clean Process Lifecycle**: Services run in the foreground as PID 1 or via dedicated daemons without infinite loops (`tail -f`) or hacky keepalive scripts.
+- **Service Auto-restart**: Containers feature automatic restart policies (`restart: on-failure`) ensuring high availability.
 
 ---
 
@@ -67,21 +105,22 @@ The infrastructure deploys a dynamic **WordPress** website powered by a **MariaD
 
 ### Available Makefile Commands
 
-| Command             | Action                                                                                       |
-| :------------------ | :------------------------------------------------------------------------------------------- |
-| `make` / `make all` | Creates host data directories, builds images, and starts all containers in detached mode.    |
-| `make build`        | Builds or rebuilds all Docker images.                                                        |
-| `make up`           | Starts the containers without rebuilding.                                                    |
-| `make down`         | Stops and removes active containers and networks.                                            |
-| `make status`       | Displays the status of containers, volumes, and networks.                                    |
-| `make logs`         | Follows real-time logs from all services.                                                    |
-| `make clean`        | Stops containers and removes built Docker images.                                            |
-| `make fclean`       | Complete teardown: removes containers, images, networks, volumes, and host data directories. |
-| `make re`           | Re-executes `fclean` followed by `all`.                                                      |
+| Command               | Action                                                                                       |
+| :-------------------- | :------------------------------------------------------------------------------------------- |
+| `make` / `make all`   | Creates host data directories, builds images, and starts all containers in detached mode.    |
+| `make build`          | Builds or rebuilds all Docker images.                                                        |
+| `make build-no-cache` | Builds or rebuilds all Docker images without cache.                                          |
+| `make up`             | Starts the containers without rebuilding.                                                    |
+| `make down`           | Stops and removes active containers and networks.                                            |
+| `make status`         | Displays the status of containers, volumes, and networks.                                    |
+| `make logs`           | Follows real-time logs from all services.                                                    |
+| `make clean`          | Stops containers and removes built Docker images.                                            |
+| `make fclean`         | Complete teardown: removes containers, images, networks, volumes, and host data directories. |
+| `make re`             | Re-executes `fclean` followed by `all`.                                                      |
 
 ---
 
-## Project Description & Architectural Comparisons
+## Architectural Comparisons
 
 ### 1. Virtual Machines vs Docker Containers
 
@@ -123,3 +162,9 @@ AI assistance was utilized as an interactive tutor and pair-programming partner 
 - **Pedagogical explanations**: Clarifying Linux process management (PID 1), daemon foreground execution (`daemon off;`, `php-fpm -F`), and FastCGI communication between NGINX and PHP-FPM.
 - **Architecture design**: Validating idempotence strategies for database initialization (`mariadbd --bootstrap`) and automated WordPress deployment via WP-CLI.
 - **Documentation structuring**: Formulating architectural comparisons and user/developer guides according to the 42 Inception evaluation standard.
+
+---
+
+## License
+
+This project is licensed under the [MIT License](LICENSE). Educational project created as part of the 42 curriculum.

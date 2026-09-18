@@ -1,15 +1,3 @@
-# **************************************************************************** #
-#                                                                              #
-#                                                         :::      ::::::::    #
-#    Makefile                                           :+:      :+:    :+:    #
-#                                                     +:+ +:+         +:+      #
-#    By: bpasquer <bpasquer@student.42.fr>          +#+  +:+       +#+         #
-#                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2026/09/02 15:30:00 by bpasquer          #+#    #+#              #
-#    Updated: 2026/09/04 14:00:00 by bpasquer         ###   ########.fr        #
-#                                                                              #
-# **************************************************************************** #
-
 NAME			= inception
 COMPOSE_FILE	= srcs/docker-compose.yml
 COMPOSE			= docker compose -f $(COMPOSE_FILE)
@@ -23,7 +11,7 @@ DB_DATA			= $(DATA_DIR)/mariadb
 GREEN			= \033[0;32m
 YELLOW			= \033[0;33m
 RED				= \033[0;31m
-BLUE			= \033[0;34m
+ORANGE			= \033[38;5;208m
 RESET			= \033[0m
 
 # ==============================================================================
@@ -32,7 +20,7 @@ RESET			= \033[0m
 
 all: build up
 	@echo "$(GREEN)[SUCCESS] Infrastructure Inception démarrée avec succès !$(RESET)"
-	@echo "$(BLUE)[INFO] Accédez au site sur : https://bpasquer.42.fr$(RESET)"
+	@echo "$(ORANGE)[INFO] Accédez au site sur : https://bpasquer.42.fr$(RESET)"
 
 init:
 	@echo "$(YELLOW)[INFO] Création des répertoires de données persistantes sur l'hôte...$(RESET)"
@@ -41,6 +29,10 @@ init:
 build: init
 	@echo "$(YELLOW)[INFO] Construction des images Docker (Debian Bookworm)...$(RESET)"
 	@$(COMPOSE) build
+
+build-no-cache: init
+	@echo "$(YELLOW)[INFO] Construction des images Docker SANS CACHE...$(RESET)"
+	@$(COMPOSE) build --no-cache
 
 up: init
 	@echo "$(YELLOW)[INFO] Lancement des conteneurs en arrière-plan...$(RESET)"
@@ -59,11 +51,11 @@ start:
 	@$(COMPOSE) start
 
 status:
-	@echo "$(BLUE)=== ÉTAT DES CONTENEURS ===$(RESET)"
+	@echo "$(ORANGE)=== ÉTAT DES CONTENEURS ===$(RESET)"
 	@$(COMPOSE) ps
-	@echo "\n$(BLUE)=== VOLUMES DOCKER ===$(RESET)"
+	@echo "\n$(ORANGE)=== VOLUMES DOCKER ===$(RESET)"
 	@docker volume ls | grep -E "NAME|wp_data|db_data" || true
-	@echo "\n$(BLUE)=== RESEAUX DOCKER ===$(RESET)"
+	@echo "\n$(ORANGE)=== RESEAUX DOCKER ===$(RESET)"
 	@docker network ls | grep -E "NAME|inception" || true
 
 logs:
@@ -90,4 +82,4 @@ fclean:
 
 re: fclean all
 
-.PHONY: all init build up down stop start status logs clean fclean re
+.PHONY: all init build build-no-cache up down stop start status logs clean fclean re
