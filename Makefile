@@ -39,7 +39,7 @@ init:
 	@mkdir -p $(WP_DATA) $(DB_DATA) 2>/dev/null || true
 
 build: init
-	@echo "$(YELLOW)[INFO] Construction des images Docker (Debian Bullseye)...$(RESET)"
+	@echo "$(YELLOW)[INFO] Construction des images Docker (Debian Bookworm)...$(RESET)"
 	@$(COMPOSE) build
 
 up: init

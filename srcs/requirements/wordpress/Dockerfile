@@ -1,17 +1,19 @@
-# On utilise l'avant-dernière version stable de Debian (Bullseye).
-FROM debian:bullseye
+# 1. IMAGE DE BASE (REGLE DU SUJET 42)
+# Debian Bookworm (Debian 12 - tag explicite obligatoire, :latest interdit)
+FROM debian:bookworm
 
 # 2. INSTALLATION DES PAQUETS SYSTEME ET PHP
-# - php7.4-fpm : Le gestionnaire de processus FastCGI qui exécute le code PHP
-# - php7.4-mysql : L'extension PHP pour communiquer avec MariaDB
+# Debian 12 fournit nativement PHP 8.2
+# - php8.2-fpm : Le gestionnaire de processus FastCGI qui exécute le code PHP
+# - php8.2-mysql : L'extension PHP pour communiquer avec MariaDB
 # - mariadb-client : Permet de tester la connexion à la base de données avant d'installer
 # - curl & ca-certificates : Pour télécharger WP-CLI de manière sécurisée en HTTPS
 # - bash : Le shell standard
 # - rm -rf /var/lib/apt/lists/* : Supprime le cache APT pour garder l'image légère
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    php7.4-fpm \
-    php7.4-mysql \
+    php8.2-fpm \
+    php8.2-mysql \
     mariadb-client \
     curl \
     ca-certificates \
@@ -34,7 +36,7 @@ RUN mkdir -p /run/php /var/www/html && \
 
 # 5. INJECTION DE NOTRE CONFIGURATION RESEAU
 # Remplace la configuration par défaut pour écouter sur le port TCP 9000 (0.0.0.0:9000)
-COPY conf/www.conf /etc/php/7.4/fpm/pool.d/www.conf
+COPY conf/www.conf /etc/php/8.2/fpm/pool.d/www.conf
 
 # 6. INJECTION ET PERMISSION DU SCRIPT D'INITIALISATION
 COPY tools/wp_init.sh /usr/local/bin/wp_init.sh
